@@ -1,0 +1,12 @@
+---
+host: ads.volt.in
+port: 7531
+
+database:
+  influx:
+    host: localhost
+    port: 1234
+    database: db
+    username: user
+    password: pass
+  
