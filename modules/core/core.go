@@ -6,14 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Routes is route
+// Routes has all the core routes
 func Routes(router *gin.Engine) {
-	core := router.Group("/core")
+	core := router.Group("/api")
 	{
 		core.GET("/status", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
-				"msg": "ok",
+				"module": "core",
+				"msg":    "online",
 			})
 		})
 	}
+
+	// Append Advertiser routes
+	advertiserRoutes(router)
+	campaignRoutes(router)
+	inventoryRoutes(router)
+	publisherRoutes(router)
 }

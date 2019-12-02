@@ -19,7 +19,7 @@ Volt Adserver: The fastest open source ad server built for the community
 
 ## Documentation ##
 
-* Port7531
+* Port: 7531
 
 ### Who do I talk to? ###
 

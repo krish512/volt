@@ -3,10 +3,9 @@ host: ads.volt.in
 port: 7531
 
 database:
-  influx:
-    host: localhost
-    port: 1234
-    database: db
-    username: user
-    password: pass
+  aerospike:
+    host: 127.0.0.1
+    port: 3000
+    namespace: test
+    timeout: 600
   

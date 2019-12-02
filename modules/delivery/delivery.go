@@ -12,11 +12,11 @@ func dummy(c *gin.Context) {
 	})
 }
 
-// Routes is route
+// Routes has all the delivery routes
 func Routes(router *gin.Engine) {
 	serve := router.Group("/serve")
 	{
-		serve.GET("/ad/:target/call", dummy)
+		serve.GET("/ad/:inventory/call", dummy)
 		serve.GET("/reg/:campaign/:event/ack.png", dummy)
 	}
 }
