@@ -12,20 +12,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func inventoryRoutes(router *gin.Engine) {
-	inventory := router.Group("/api/inventory")
+func adunitRoutes(router *gin.Engine) {
+	adunit := router.Group("/api/adunit")
 	{
-		inventory.POST("/create", createInventoryHandler)
-		inventory.GET("/", getAllInventoriesHandler)
+		adunit.POST("/create", createAdUnitHandler)
+		adunit.GET("/", getAllAdUnitsHandler)
 	}
 }
 
-func createInventoryHandler(c *gin.Context) {
+func createAdUnitHandler(c *gin.Context) {
 
-	keyUUID := uuid.Must(uuid.NewUUID()).String()
+	keyUUID := uuid.New().String()
 	key, _ := as.NewKey(config.Conf.Database.Aerospike.Namespace, "inventories", keyUUID)
 	binName := as.NewBin("name", "Paragon")
-	binDescription := as.NewBin("description", "Our premium inventory")
+	binDescription := as.NewBin("description", c.Query("description"))
 	binPublisher := as.NewBin("publisher", "54ea76a8-1537-11ea-8cd4-a683e78ecd24")
 	binActive := as.NewBin("isActive", 1)
 	binUpdatedAt := as.NewBin("updatedAt", int32(time.Now().Unix()))
@@ -40,18 +40,18 @@ func createInventoryHandler(c *gin.Context) {
 		})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{
-			"msg": "Create inventory",
+			"msg": "Ad Unit created",
 		})
 	}
 }
 
-func getAllInventoriesHandler(c *gin.Context) {
+func getAllAdUnitsHandler(c *gin.Context) {
 
-	stmt := as.NewStatement(config.Conf.Database.Aerospike.Namespace, "inventories", "name", "description", "status")
+	stmt := as.NewStatement(config.Conf.Database.Aerospike.Namespace, "adunits", "name", "description", "status")
 	stmt.SetFilter(as.NewEqualFilter("isActive", 1))
 	rs, err := master.Client.Query(master.Client.DefaultQueryPolicy, stmt)
 	if err != nil {
-		log.Fatalf("Master write error: %v", err)
+		log.Fatalf("Master query error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": true,
 			"msg":   err,
@@ -73,6 +73,6 @@ func getAllInventoriesHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"inventories": result,
+		"adunits": result,
 	})
 }

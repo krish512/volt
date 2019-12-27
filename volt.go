@@ -27,6 +27,9 @@ func initResources() {
 	defer utils.Logger.Sync()
 	config.InitConf()
 	master.ConnectMaster()
+
+	// ToDo Shift to cron job
+	delivery.UpdateActiveCampaignsCache()
 }
 
 func closeResources() {

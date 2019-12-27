@@ -21,6 +21,7 @@ func Routes(router *gin.Engine) {
 	// Append Advertiser routes
 	advertiserRoutes(router)
 	campaignRoutes(router)
-	inventoryRoutes(router)
+	creativeRoutes(router)
+	adunitRoutes(router)
 	publisherRoutes(router)
 }

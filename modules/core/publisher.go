@@ -12,6 +12,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// Publisher is the one who wants to show an ad
+type Publisher struct {
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+}
+
 func publisherRoutes(router *gin.Engine) {
 	publisher := router.Group("/api/publisher")
 	{
@@ -22,15 +28,25 @@ func publisherRoutes(router *gin.Engine) {
 
 func createPublisherHandler(c *gin.Context) {
 
-	keyUUID := uuid.Must(uuid.NewUUID()).String()
+	var publisher Publisher
+	err := c.ShouldBindJSON(&publisher)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": true,
+			"msg":   "Missing required parameters",
+		})
+		return
+	}
+
+	keyUUID := uuid.New().String()
 	key, _ := as.NewKey(config.Conf.Database.Aerospike.Namespace, "publishers", keyUUID)
-	binName := as.NewBin("name", "Paragon")
-	binDescription := as.NewBin("description", "Our premium publisher")
+	binName := as.NewBin("name", publisher.Name)
+	binDescription := as.NewBin("description", publisher.Description)
 	binActive := as.NewBin("isActive", 1)
 	binUpdatedAt := as.NewBin("updatedAt", int32(time.Now().Unix()))
 	binCreatedAt := as.NewBin("createdAt", int32(time.Now().Unix()))
 
-	err := master.Client.PutBins(master.Client.DefaultWritePolicy, key, binName, binDescription, binActive, binUpdatedAt, binCreatedAt)
+	err = master.Client.PutBins(master.Client.DefaultWritePolicy, key, binName, binDescription, binActive, binUpdatedAt, binCreatedAt)
 	if err != nil {
 		log.Fatalf("Master write error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -39,7 +55,8 @@ func createPublisherHandler(c *gin.Context) {
 		})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{
-			"msg": "Create publisher",
+			"msg": "Publisher created",
+			"key": keyUUID,
 		})
 	}
 }
@@ -66,7 +83,6 @@ func getAllPublishersHandler(c *gin.Context) {
 			item["key"] = res.Record.Key.Value().String()
 			item["name"] = res.Record.Bins["name"].(string)
 			item["description"] = res.Record.Bins["description"].(string)
-			item["status"] = res.Record.Bins["status"].(string)
 			result = append(result, item)
 		}
 	}

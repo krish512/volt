@@ -12,6 +12,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// Advertiser is the one who wants to show an ad
+type Advertiser struct {
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+}
+
 func advertiserRoutes(router *gin.Engine) {
 	advertiser := router.Group("/api/advertiser")
 	{
@@ -22,15 +28,25 @@ func advertiserRoutes(router *gin.Engine) {
 
 func createAdvertiserHandler(c *gin.Context) {
 
-	keyUUID := uuid.Must(uuid.NewUUID()).String()
+	var advertiser Advertiser
+	err := c.ShouldBindJSON(&advertiser)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": true,
+			"msg":   "Missing required parameters",
+		})
+		return
+	}
+
+	keyUUID := uuid.New().String()
 	key, _ := as.NewKey(config.Conf.Database.Aerospike.Namespace, "advertisers", keyUUID)
-	binName := as.NewBin("name", "Paragon")
-	binDescription := as.NewBin("description", "Our premium advertiser")
+	binName := as.NewBin("name", advertiser.Name)
+	binDescription := as.NewBin("description", advertiser.Description)
 	binActive := as.NewBin("isActive", 1)
 	binUpdatedAt := as.NewBin("updatedAt", int32(time.Now().Unix()))
 	binCreatedAt := as.NewBin("createdAt", int32(time.Now().Unix()))
 
-	err := master.Client.PutBins(master.Client.DefaultWritePolicy, key, binName, binDescription, binActive, binUpdatedAt, binCreatedAt)
+	err = master.Client.PutBins(master.Client.DefaultWritePolicy, key, binName, binDescription, binActive, binUpdatedAt, binCreatedAt)
 	if err != nil {
 		log.Fatalf("Master write error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -39,7 +55,8 @@ func createAdvertiserHandler(c *gin.Context) {
 		})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{
-			"msg": "Create Advertiser",
+			"msg": "Advertiser created",
+			"key": keyUUID,
 		})
 	}
 }
@@ -50,7 +67,7 @@ func getAllAdvertisersHandler(c *gin.Context) {
 	stmt.SetFilter(as.NewEqualFilter("isActive", 1))
 	rs, err := master.Client.Query(master.Client.DefaultQueryPolicy, stmt)
 	if err != nil {
-		log.Fatalf("Master write error: %v", err)
+		log.Fatalf("Master query error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": true,
 			"msg":   err,
