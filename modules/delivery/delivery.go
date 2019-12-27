@@ -17,7 +17,7 @@ type CampaignDeliver struct {
 	Creatives []interface{} `json:"creatives" binding:"required"`
 }
 
-var campaignsCache map[string]CampaignDeliver
+var campaignsCache map[string][]CampaignDeliver
 
 // Routes has all the delivery routes
 func Routes(router *gin.Engine) {
@@ -39,8 +39,8 @@ func UpdateActiveCampaignsCache() {
 	// ToDo
 
 	// PoC
-	var campaignsCacheTmp map[string]CampaignDeliver
-	campaignsCacheTmp = make(map[string]CampaignDeliver)
+	var campaignsCacheTmp map[string][]CampaignDeliver
+	campaignsCacheTmp = make(map[string][]CampaignDeliver)
 	stmt := as.NewStatement(config.Conf.Database.Aerospike.Namespace, "campaigns", "adunits", "creatives")
 	stmt.SetFilter(as.NewEqualFilter("isActive", 1))
 	// stmt.SetFilter(as.NewEqualFilter("startAt", 1))
@@ -50,7 +50,7 @@ func UpdateActiveCampaignsCache() {
 		log.Fatalf("Master query error: %v", err)
 	}
 
-	// var result []map[string]interface{}
+	// Iterate through every active campaign and add it to campaignsCacheTmp
 	for res := range rs.Results() {
 		if res.Err != nil {
 			log.Printf("Error: %v", err)
@@ -63,7 +63,8 @@ func UpdateActiveCampaignsCache() {
 			}
 			adunits := res.Record.Bins["adunits"].([]interface{})
 			for _, adunit := range adunits {
-				campaignsCacheTmp[adunit.(string)] = campaignDeliver
+				// Add campaign to ad unit
+				campaignsCacheTmp[adunit.(string)] = append(campaignsCacheTmp[adunit.(string)], campaignDeliver)
 			}
 		}
 	}
