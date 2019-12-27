@@ -87,7 +87,7 @@ func getAllAdvertisersHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"advertisers": result,
 	})
 }

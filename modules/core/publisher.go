@@ -87,7 +87,7 @@ func getAllPublishersHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"publishers": result,
 	})
 }

@@ -23,7 +23,7 @@ func adunitRoutes(router *gin.Engine) {
 func createAdUnitHandler(c *gin.Context) {
 
 	keyUUID := uuid.New().String()
-	key, _ := as.NewKey(config.Conf.Database.Aerospike.Namespace, "inventories", keyUUID)
+	key, _ := as.NewKey(config.Conf.Database.Aerospike.Namespace, "adunits", keyUUID)
 	binName := as.NewBin("name", "Paragon")
 	binDescription := as.NewBin("description", c.Query("description"))
 	binPublisher := as.NewBin("publisher", "54ea76a8-1537-11ea-8cd4-a683e78ecd24")
@@ -47,7 +47,7 @@ func createAdUnitHandler(c *gin.Context) {
 
 func getAllAdUnitsHandler(c *gin.Context) {
 
-	stmt := as.NewStatement(config.Conf.Database.Aerospike.Namespace, "adunits", "name", "description", "status")
+	stmt := as.NewStatement(config.Conf.Database.Aerospike.Namespace, "adunits", "name", "description")
 	stmt.SetFilter(as.NewEqualFilter("isActive", 1))
 	rs, err := master.Client.Query(master.Client.DefaultQueryPolicy, stmt)
 	if err != nil {
@@ -67,12 +67,11 @@ func getAllAdUnitsHandler(c *gin.Context) {
 			item["key"] = res.Record.Key.Value().String()
 			item["name"] = res.Record.Bins["name"].(string)
 			item["description"] = res.Record.Bins["description"].(string)
-			item["status"] = res.Record.Bins["status"].(string)
 			result = append(result, item)
 		}
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"adunits": result,
 	})
 }
